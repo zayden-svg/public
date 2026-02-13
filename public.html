@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STClab | 시스템 안정성 자가진단</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --stc-blue: #0055ff; --stc-mint: #00e5a4; --stc-dark: #0f172a; --bg-color: #f8fafc; }
+        body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg-color); background-image: radial-gradient(at 0% 0%, #e0e7ff 0, transparent 50%), radial-gradient(at 100% 100%, #d1fae5 0, transparent 50%); margin: 0; padding: 40px 20px; display: flex; justify-content: center; min-height: 100vh; }
+        .container { max-width: 1200px; width: 100%; display: grid; grid-template-columns: 1fr 380px; gap: 30px; }
+        .header { grid-column: 1 / span 2; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(15px); padding: 25px 40px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.8); }
+        .logo-area { display: flex; align-items: center; gap: 20px; }
+        .logo-img { height: 50px; }
+        .title-area h1 { margin: 0; font-size: 24px; font-weight: 900; color: var(--stc-dark); letter-spacing: -1px; }
+        .title-area p { margin: 5px 0 0; color: #64748b; font-size: 14px; }
+        .question-list { display: flex; flex-direction: column; gap: 15px; }
+        .q-card { background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid rgba(255,255,255,0.5); transition: 0.3s; }
+        .q-card:hover { transform: translateY(-5px); border-color: var(--stc-blue); }
+        .q-tag { font-size: 11px; font-weight: 700; color: #fff; background: var(--stc-blue); padding: 4px 12px; border-radius: 50px; display: inline-block; margin-bottom: 12px; }
+        .q-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--stc-dark); }
+        .q-desc { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 20px; }
+        .btn-group { display: flex; gap: 10px; }
+        .btn-group input { display: none; }
+        .btn-group label { flex: 1; text-align: center; padding: 12px; border-radius: 12px; background: #fff; border: 1.5px solid #e2e8f0; cursor: pointer; font-size: 14px; font-weight: 600; color: #64748b; }
+        .btn-group input:checked + label[for*="a"] { background: var(--stc-blue); color: #fff; border-color: var(--stc-blue); }
+        .btn-group input:checked + label[for*="b"] { background: #94a3b8; color: #fff; border-color: #94a3b8; }
+        .btn-group input:checked + label[for*="c"] { background: #ef4444; color: #fff; border-color: #ef4444; }
+        .sidebar { position: sticky; top: 40px; height: fit-content; }
+        .result-card { background: var(--stc-dark); color: #fff; padding: 35px; border-radius: 32px; text-align: center; box-shadow: 0 25px 50px rgba(15, 23, 42, 0.3); border: 1px solid rgba(255,255,255,0.1); }
+        .chart-box { position: relative; width: 220px; height: 220px; margin: 0 auto 20px; }
+        .chart-svg { transform: rotate(-90deg); width: 220px; height: 220px; }
+        .circle-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 14; }
+        .circle-fill { fill: none; stroke: var(--stc-mint); stroke-width: 14; stroke-dasharray: 565.48; stroke-dashoffset: 565.48; transition: 1s ease; stroke-linecap: round; }
+        .score-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .score-text .num { font-size: 56px; font-weight: 900; display: block; }
+        .status-badge { font-size: 18px; font-weight: 800; padding: 10px 25px; border-radius: 50px; margin-bottom: 25px; display: inline-block; }
+        .advice-box { background: rgba(255,255,255,0.05); padding: 22px; border-radius: 18px; text-align: left; border-left: 4px solid var(--stc-mint); }
+        .advice-box h4 { margin: 0 0 10px; font-size: 16px; color: var(--stc-mint); }
+        .contact-info { margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 13px; text-align: left; opacity: 0.8; }
+        @media (max-width: 1000px) { .container { grid-template-columns: 1fr; } .sidebar { position: static; margin-bottom: 20px; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="logo-area">
+            <img src="logo.png" alt="STClab Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/150x50?text=STClab+Logo'">
+            <div class="title-area">
+                <h1>행안부 지침 준수 <span>시스템 안정성 정밀 분석 리포트</span></h1>
+                <p>장애 예방(제20조) 및 성능 관리(제25조) 이행 수준 자가진단</p>
+            </div>
+        </div>
+    </div>
+    <div class="question-list" id="q-list"></div>
+    <div class="sidebar">
+        <div class="result-card">
+            <h3>실시간 진단 리포트</h3>
+            <div class="chart-box">
+                <svg class="chart-svg"><circle class="circle-bg" cx="110" cy="110" r="90"></circle><circle id="bar" class="circle-fill" cx="110" cy="110" r="90"></circle></svg>
+                <div class="score-text"><span id="score" class="num">0</span><span>종합 점수</span></div>
+            </div>
+            <div id="badge" class="status-badge" style="background: rgba(255,255,255,0.1);">진단 전</div>
+            <div class="advice-box">
+                <h4>💡 STClab 가이드</h4>
+                <p id="advice">진단을 완료하시면 귀 기관의 정보시스템 환경에 최적화된 운영 고도화 방안을 안내해 드립니다.</p>
+                <div class="contact-info">✉️ 문의: limkh@stclab.com<br>📞 대표번호: 02-3453-1424</div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+const data = [
+    { t: "행안부 지침 제20조", q: "임계치 초과 트래픽 자동 제어", d: "서버 수용량을 넘어서는 접속 시도가 발생할 때, 시스템 중단 없이 유입을 자동으로 제어(Throttling) 하고 있습니까?" },
+    { t: "행안부 지침 제20조", q: "반복적 새로고침(F5) 부하 방지", d: "사용자의 고의적 또는 실수에 의한 반복 요청이 DB와 WAS 자원을 고갈시키지 않도록 기술적으로 차단 중입니까?" },
+    { t: "행안부 지침 제20조", q: "가상 대기열을 통한 순차 진입", d: "접속 지연 시 사용자에게 순차적인 대기 번호와 예상 시간을 안내하여 서비스 신뢰도를 확보하고 있습니까?" },
+    { t: "행안부 지침 제20조", q: "연쇄적 장애(Cascading) 방지", d: "외부 인증이나 결제 모듈의 지연이 내부 시스템 전체의 장애로 번지는 것을 독립적으로 제어할 수 있습니까?" },
+    { t: "행안부 지침 제25조", q: "기 접속자 서비스 성능 보장", d: "트래픽이 폭주하더라도 이미 진입한 사용자에게는 평상시와 동일한 최적의 응답 속도를 일관되게 보장합니까?" },
+    { t: "행안부 지침 제25조", q: "인프라 증설 없는 유동적 대응", d: "일시적 피크 타임을 위해 서버를 무제한 증설하는 대신, 소프트웨어적으로 유량을 조절해 예산을 효율적으로 운영합니까?" },
+    { t: "행안부 지침 제25조", q: "실시간 자원 보호 임계치 관리", d: "시스템 부하 상태에 따라 유입량을 실시간으로 조절할 수 있는 유연한 임계치(Threshold) 관리 체계를 갖추었습니까?" },
+    { t: "공정성 확보", q: "매크로 및 비정상 접근 차단", d: "봇(Bot)이나 매크로를 이용한 비정상적 자원 독점을 차단하여 선착순 서비스의 공정성을 확보하고 있습니까?" },
+    { t: "신뢰도 제고", q: "투명한 접속 데이터 제공", d: "지연 상황에서 불투명한 로딩 대신, 객관적인 대기 데이터를 제공하여 민원 발생 가능성을 사전에 최소화하고 있습니까?" },
+    { t: "컴플라이언스", q: "기술적 증빙 및 리포팅 체계", d: "장애 발생 시, 행안부 지침에 따라 최선의 예방 조치를 취했음을 입증할 수 있는 통계 리포트를 보유하고 있습니까?" }
+];
+const list = document.getElementById('q-list');
+data.forEach((item, i) => { list.innerHTML += `<div class="q-card"><span class="q-tag">${item.t}</span><div class="q-title">${i+1}. ${item.q}</div><div class="q-desc">${item.d}</div><div class="btn-group"><input type="radio" name="g${i}" id="q${i}a" value="3" onchange="calc()"><label for="q${i}a">예</label><input type="radio" name="g${i}" id="q${i}b" value="2" onchange="calc()"><label for="q${i}b">검토중</label><input type="radio" name="g${i}" id="q${i}c" value="1" onchange="calc()"><label for="q${i}c">아니오</label></div></div>`; });
+function calc() {
+    let s = 0, c = 0;
+    for(let i=0; i<10; i++) { const r = document.querySelector(`input[name="g${i}"]:checked`); if(r) { s += parseInt(r.value); c++; } }
+    document.getElementById('score').innerText = s;
+    document.getElementById('bar').style.strokeDashoffset = 565.48 - (s / 30) * 565.48;
+    const b = document.getElementById('badge'), a = document.getElementById('advice');
+    if(c < 10) { b.innerText = "진단 진행 중..."; } 
+    else {
+        if(s >= 26) { b.innerText = "양호 (Safe)"; b.style.background = "#059669"; a.innerHTML = "행정안전부의 정보시스템 지침을 모범적으로 준수하고 계십니다. 현재의 안정성을 유지하며 대국민 서비스 품질을 높일 수 있는 <b>상시 유량 제어 고도화 방안</b>을 안내해 드립니다."; } 
+        else if(s >= 18) { b.innerText = "주의 (Warning)"; b.style.background = "#d97706"; a.innerHTML = "기본 대응 체계는 있으나 특정 상황의 리스크 관리가 필요합니다. 완벽한 지침 준수를 위한 <b>성능 최적화 및 고도화 전략</b>을 제안해 드리겠습니다."; } 
+        else { b.innerText = "위험 (Danger)"; b.style.background = "#dc2626"; a.innerHTML = "현재 안정성 확보를 위해 <b>전문가의 정밀 진단이 권장되는 단계</b>입니다. 필요하시다면 <b>무상 PoC(기술 검증)</b>를 통해 개선 효과를 직접 확인하실 수 있도록 성심껏 지원하겠습니다."; }
+    }
+}
+</script>
+</body>
+</html>
